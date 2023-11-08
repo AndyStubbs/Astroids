@@ -12,7 +12,7 @@
 		game.world.scale.y = 0.4;
 		g.app.stage.addChild( game.world );
 		game.astroids = [];
-		createAstroids( 4 + game.level, 3 );
+		createAstroids( game.level, 3 );
 		g.app.ticker.add( run );
 	};
 
@@ -21,6 +21,8 @@
 		game.lives = 3;
 		game.score = 0;
 		game.level = 1;
+		game.nextLevelUp = 1000;
+		game.levelUpIncrement = 1000;
 		game.ship = createShip( "playerShip1", "blue" );
 		createUi();
 		document.addEventListener( "keydown", keydown );
@@ -250,6 +252,8 @@
 
 	function setupShip( ship ) {
 
+		g.assets.audio[ "twoTone" ].play();
+
 		// Set the ship's position to the center of the screen
 		const pos = game.world.toLocal(
 			new PIXI.Point( g.app.screen.width / 2, g.app.screen.height / 2 )
@@ -318,13 +322,13 @@
 		// Add Level Text
 		game.ui.level = new PIXI.Text( game.level, {
 			"fontFamily": "Arial",
-			"fontSize": 48,
+			"fontSize": 36,
 			"fill": 0xFFFFFF,
 			"stroke": 0x000000,
 			"strokeThickness": 3,
 		} );
 		game.ui.level.x = g.app.screen.width / g.app.stage.scale.x / 2;
-		game.ui.level.y = 8;
+		game.ui.level.y = 3;
 		game.ui.level.anchor.set( 0.5, 0 );
 		g.app.stage.addChild( game.ui.level );
 
@@ -340,11 +344,32 @@
 		game.ui.score.y = 8;
 		game.ui.score.anchor.set( 1, 0 );
 		g.app.stage.addChild( game.ui.score );
+
+		// Add Astroid Counter
+		game.ui.astroidCounter = new PIXI.Text( game.astroids.length, {
+			"fontFamily": "Arial",
+			"fontSize": 24,
+			"fill": 0x000000,
+			"stroke": 0xFFFFFF,
+			"strokeThickness": 3,
+		} );
+		game.ui.astroidCounter.x = g.app.screen.width / g.app.stage.scale.x / 2;
+		game.ui.astroidCounter.y = g.app.screen.height / g.app.stage.scale.y - 30;
+		game.ui.astroidCounter.anchor.set( 0.5, 0 );
+		g.app.stage.addChild( game.ui.astroidCounter );
 	}
 
 	function updateUi() {
+		if( game.score > game.nextLevelUp ) {
+			g.assets.audio[ "twoTone" ].play();
+			game.lives++;
+			game.nextLevelUp += game.levelUpIncrement;
+			game.levelUpIncrement += 1000;
+		}
 		game.ui.lives.text = game.lives;
 		game.ui.score.text = game.score;
+		game.ui.level.text = game.level;
+		game.ui.astroidCounter.text = game.astroids.length;
 	}
 
 	function run( delta ) {
@@ -411,15 +436,7 @@
 						game.score += 3;
 						astroid.health--;
 						if( astroid.health <= 0 ) {
-							game.score += 10;
-							killObject( astroid );
-							if( astroid.size > 1 ) {
-								createAstroids(
-									astroid.size,
-									astroid.size - 1,
-									{ "x": astroid.container.x, "y": astroid.container.y }
-								);
-							}
+							killAstroid( astroid );
 						}
 						killObject( bullet );
 						updateUi();
@@ -427,6 +444,29 @@
 				} );
 			}
 		} );
+	}
+
+	function killAstroid( astroid ) {
+		game.score += 10;
+		astroid.afterKilled = () => {
+			game.astroids.splice( game.astroids.indexOf( astroid ), 1 );
+			if( game.astroids.length === 0 ) {
+				game.level++;
+				setTimeout( () => {
+					createAstroids( game.level, 3 );
+				}, 3000 );
+				game.score += 100;
+			}
+			updateUi();
+		};
+		if( astroid.size > 1 ) {
+			createAstroids(
+				astroid.size,
+				astroid.size - 1,
+				{ "x": astroid.container.x, "y": astroid.container.y }
+			);
+		}
+		killObject( astroid );
 	}
 
 	function moveAstroids( astroids, delta ) {
@@ -452,6 +492,7 @@
 							g.app.stage.removeChildren();
 							g.app.stage.addChild( g.assets.background );
 							g.app.ticker.remove( run );
+							game.level = 1;
 							g.createWorld();
 							document.removeEventListener( "keydown", keydown );
 							document.removeEventListener( "keyup", keyup );
@@ -507,6 +548,9 @@
 			obj.explosion.visible = false;
 			obj.explosion.gotoAndStop( 0 );
 			obj.container.visible = false;
+			if( obj.afterKilled ) {
+				obj.afterKilled();
+			}
 		};
 		obj.explosion.play();
 	}
