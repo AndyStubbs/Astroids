@@ -64,7 +64,7 @@ g.getHexColor = function getHex( color ) {
 			};
 			for( let i = 0; i < 6; i++ ) {
 				g.assets.audio[ "laser" + ( i + 1 ) ].volume = 0.5;
-				g.assets.audio[ "laser" + ( i + 1 ) ].playbackRate = 2.5;
+				g.assets.audio[ "laser" + ( i + 1 ) ].playbackRate = 1.5;
 			}
 			g.spritesheet = await PIXI.Assets.load( "assets/spritesheet.json" );
 			g.createWorld();
@@ -83,6 +83,9 @@ g.getHexColor = function getHex( color ) {
 		// Add the application to the page
 		document.body.appendChild( g.app.view );
 		resize();
+
+		// Show the loading screen
+		g.showLoading();
 
 		// Resize the background when the window is resized
 		window.addEventListener( "resize", resize );
