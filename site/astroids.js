@@ -81,13 +81,11 @@ g.getHexColor = function getHex( color ) {
 					g.assets.audio[ "laser" + ( i + 1 ) ].playbackRate = 1.5;
 				}
 				g.soundLoaded = true;
-				console.log( "Audio loaded" );
 			} );
 
 			// Wait for the sprite sheet to load
 			g.spritesheet = await spriteSheetPromise;
 
-			console.log( "Spritesheets loaded" );
 			// Create the world and show the intro
 			g.createWorld();
 			g.showIntro();
