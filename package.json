@@ -1,0 +1,24 @@
+{
+  "name": "astroids",
+  "description": "A simple Astroids clone",
+  "version": "1.0.0",
+  "main": "server.js",
+  "scripts": {
+    "start": "start node server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AndyStubbs/Astroids.git"
+  },
+  "author": "Andy Stubbs",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/AndyStubbs/Astroids/issues"
+  },
+  "homepage": "https://github.com/AndyStubbs/Astroids#readme",
+  "devDependencies": {
+    "connect": "^3.7.0",
+    "serve-static": "^1.15.0"
+  }
+}
