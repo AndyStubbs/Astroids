@@ -1,7 +1,9 @@
 
 ( function () {
 
-	const game = {};
+	const game = {
+		"level": 1
+	};
 
 	g.createWorld = function createWorld() {
 		createTextureGroups();
@@ -10,13 +12,17 @@
 		game.world.scale.y = 0.4;
 		g.app.stage.addChild( game.world );
 		game.astroids = [];
-		createAstroids( 10, 3 );
+		createAstroids( 4 + game.level, 3 );
 		g.app.ticker.add( run );
 	};
 
 	g.startGame = function startGame() {
 		game.isRunning = true;
+		game.lives = 3;
+		game.score = 0;
+		game.level = 1;
 		game.ship = createShip( "playerShip1", "blue" );
+		createUi();
 		document.addEventListener( "keydown", keydown );
 		document.addEventListener( "keyup", keyup );
 		window.addEventListener( "blur", blur );
@@ -157,17 +163,8 @@
 		const ship = {};
 		ship.container = new PIXI.Container();
 		ship.components = [];
-		ship.shieldCooldownMax = 200;
-		ship.shieldCooldown = ship.shieldCooldownMax;
 		ship.laserSounds = [ "laser1", "laser2", "laser3", "laser4", "laser5", "laser6" ];
 		ship.laserSound = 0;
-
-		// Set the ship's position to the center of the screen
-		const pos = game.world.toLocal(
-			new PIXI.Point( g.app.screen.width / 2, g.app.screen.height / 2 )
-		);
-		ship.container.x = pos.x;
-		ship.container.y = pos.y;
 
 		// Exhaust
 		ship.exhaust = new PIXI.Graphics();
@@ -242,6 +239,28 @@
 		ship.explosion = createAnimation( "explosion", 0.35, 2.3 );
 		ship.container.addChild( ship.explosion );
 
+		// Setup the ship's initial condition
+		setupShip( ship );
+
+		// Add the ship to the world
+		game.world.addChild( ship.container );
+
+		return ship;
+	}
+
+	function setupShip( ship ) {
+
+		// Set the ship's position to the center of the screen
+		const pos = game.world.toLocal(
+			new PIXI.Point( g.app.screen.width / 2, g.app.screen.height / 2 )
+		);
+		ship.container.x = pos.x;
+		ship.container.y = pos.y;
+		ship.container.rotation = 0;
+		ship.container.visible = true;
+		ship.shieldCooldownMax = 200;
+		ship.shieldCooldown = ship.shieldCooldownMax;
+
 		// Set the ship's initial speed and rotation
 		ship.acceleration = 0;
 		ship.accelerationMax = 0.1;
@@ -254,10 +273,13 @@
 		ship.fireCooldown = 0;
 		ship.fireCooldownMax = 20;
 
-		// Add the ship to the world
-		game.world.addChild( ship.container );
-
-		return ship;
+		// Unhide components
+		ship.body.visible = true;
+		ship.shield.visible = true;
+		ship.shield.alpha = 0;
+		ship.components.forEach( ( component ) => {
+			component.visible = true;
+		} );
 	}
 
 	function createAnimation( name, speed, scale ) {
@@ -270,6 +292,59 @@
 		animation.scale.y = scale;
 
 		return animation;
+	}
+
+	function createUi() {
+		game.ui = {};
+
+		// Add Lives Icon
+		game.ui.icon = new PIXI.Sprite( g.spritesheet.textures[ "playerLife1_blue.png" ] );
+		game.ui.icon.x = 10;
+		game.ui.icon.y = 10;
+		g.app.stage.addChild( game.ui.icon );
+
+		// Add Lives Text
+		game.ui.lives = new PIXI.Text( game.lives, {
+			"fontFamily": "Arial",
+			"fontSize": 24,
+			"fill": 0xFFFFFF,
+			"stroke": 0x000000,
+			"strokeThickness": 3,
+		} );
+		game.ui.lives.x = game.ui.icon.x + game.ui.icon.width + 5;
+		game.ui.lives.y = 8;
+		g.app.stage.addChild( game.ui.lives );
+
+		// Add Level Text
+		game.ui.level = new PIXI.Text( game.level, {
+			"fontFamily": "Arial",
+			"fontSize": 48,
+			"fill": 0xFFFFFF,
+			"stroke": 0x000000,
+			"strokeThickness": 3,
+		} );
+		game.ui.level.x = g.app.screen.width / g.app.stage.scale.x / 2;
+		game.ui.level.y = 8;
+		game.ui.level.anchor.set( 0.5, 0 );
+		g.app.stage.addChild( game.ui.level );
+
+		// Add Score Text
+		game.ui.score = new PIXI.Text( game.score + "", {
+			"fontFamily": "Arial",
+			"fontSize": 24,
+			"fill": 0xFFFFFF,
+			"stroke": 0x000000,
+			"strokeThickness": 3,
+		} );
+		game.ui.score.x = g.app.screen.width / g.app.stage.scale.x - 10;
+		game.ui.score.y = 8;
+		game.ui.score.anchor.set( 1, 0 );
+		g.app.stage.addChild( game.ui.score );
+	}
+
+	function updateUi() {
+		game.ui.lives.text = game.lives;
+		game.ui.score.text = game.score;
 	}
 
 	function run( delta ) {
@@ -333,8 +408,10 @@
 						return;
 					}
 					if( checkCollision( bullet.container, astroid.container ) ) {
+						game.score += 3;
 						astroid.health--;
 						if( astroid.health <= 0 ) {
+							game.score += 10;
 							killObject( astroid );
 							if( astroid.size > 1 ) {
 								createAstroids(
@@ -345,6 +422,7 @@
 							}
 						}
 						killObject( bullet );
+						updateUi();
 					}
 				} );
 			}
@@ -367,6 +445,25 @@
 			if( game.isRunning && game.ship.isAlive && game.ship.shieldCooldown <= 0 ) {
 				if( checkCollision( game.ship.container, astroid.container ) ) {
 					killObject( game.ship );
+					game.lives--;
+					if( game.lives < 0 ) {
+						setTimeout( () => {
+							game.isRunning = false;
+							g.app.stage.removeChildren();
+							g.app.stage.addChild( g.assets.background );
+							g.app.ticker.remove( run );
+							g.createWorld();
+							document.removeEventListener( "keydown", keydown );
+							document.removeEventListener( "keyup", keyup );
+							window.removeEventListener( "blur", blur );
+							g.showIntro();
+						}, 3000 );
+					} else {
+						updateUi();
+						setTimeout( () => {
+							setupShip( game.ship );
+						}, 3000 );
+					}
 				}
 			}
 		} );
