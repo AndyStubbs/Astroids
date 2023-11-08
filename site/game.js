@@ -252,7 +252,9 @@
 
 	function setupShip( ship ) {
 
-		g.assets.audio[ "twoTone" ].play();
+		if( g.soundLoaded ) {
+			g.assets.audio[ "twoTone" ].play();
+		}
 
 		// Set the ship's position to the center of the screen
 		const pos = game.world.toLocal(
@@ -361,7 +363,9 @@
 
 	function updateUi() {
 		if( game.score > game.nextLevelUp ) {
-			g.assets.audio[ "twoTone" ].play();
+			if( g.soundLoaded ) {
+				g.assets.audio[ "twoTone" ].play();
+			}
 			game.lives++;
 			game.nextLevelUp += game.levelUpIncrement;
 			game.levelUpIncrement += 1000;
@@ -511,20 +515,20 @@
 	}
 
 	function wrapObject( obj ) {
-		const padding = Math.max( obj.width, obj.height );
+		const padding = Math.max( obj.width, obj.height ) / 2;
 		const worldWidth = ( g.app.screen.width / g.app.stage.scale.x / game.world.scale.x ) +
 			( padding * 2 );
 		const worldHeight = ( g.app.screen.height / g.app.stage.scale.y / game.world.scale.y ) +
 			( padding * 2 );
 		if( obj.x < -padding ) {
 			obj.x += worldWidth;
-		} else if( obj.x > worldWidth ) {
-			obj.x -= ( worldWidth + padding );
+		} else if( obj.x > worldWidth - padding ) {
+			obj.x -= worldWidth;
 		}
 		if( obj.y < -padding ) {
 			obj.y += worldHeight;
-		} else if( obj.y > worldHeight ) {
-			obj.y -= ( worldHeight + padding );
+		} else if( obj.y > worldHeight - padding ) {
+			obj.y -= worldHeight;
 		}
 	}
 
@@ -563,7 +567,9 @@
 				return;
 			}
 			didFire = true;
-			g.assets.audio[ ship.laserSounds[ ship.laserSound ] ].play();
+			if( g.soundLoaded ) {
+				g.assets.audio[ ship.laserSounds[ ship.laserSound ] ].play();
+			}
 			bullet.isAlive = true;
 			bullet.body.visible = true;
 			const pos = game.world.toLocal( gun.position, ship.container );

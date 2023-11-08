@@ -47,26 +47,40 @@ g.getHexColor = function getHex( color ) {
 				"assets/sounds/sfx_twoTone.ogg",
 				"assets/sounds/sfx_zap.ogg"
 			];
+
+			// Load the assets
 			const audioPromises = audioSrcs.map( src => loadAudio( src ) );
-			const audios = await Promise.all( audioPromises );
-			g.assets.audio = {
-				"laser1": audios[ 0 ],
-				"laser2": audios[ 1 ],
-				"laser3": audios[ 2 ],
-				"laser4": audios[ 3 ],
-				"laser5": audios[ 4 ],
-				"laser6": audios[ 5 ],
-				"lose": audios[ 6 ],
-				"shieldDown": audios[ 7 ],
-				"shieldUp": audios[ 8 ],
-				"twoTone": audios[ 9 ],
-				"zap": audios[ 10 ]
-			};
-			for( let i = 0; i < 6; i++ ) {
-				g.assets.audio[ "laser" + ( i + 1 ) ].volume = 0.5;
-				g.assets.audio[ "laser" + ( i + 1 ) ].playbackRate = 1.5;
-			}
-			g.spritesheet = await PIXI.Assets.load( "assets/spritesheet.json" );
+			const spriteSheetPromise = PIXI.Assets.load( "assets/spritesheet.json" );
+
+			// Wait for audio assets to load
+			g.soundLoaded = false;
+			Promise.all( audioPromises ).then( ( audios ) => {
+				g.assets.audio = {
+					"laser1": audios[ 0 ],
+					"laser2": audios[ 1 ],
+					"laser3": audios[ 2 ],
+					"laser4": audios[ 3 ],
+					"laser5": audios[ 4 ],
+					"laser6": audios[ 5 ],
+					"lose": audios[ 6 ],
+					"shieldDown": audios[ 7 ],
+					"shieldUp": audios[ 8 ],
+					"twoTone": audios[ 9 ],
+					"zap": audios[ 10 ]
+				};
+				for( let i = 0; i < 6; i++ ) {
+					g.assets.audio[ "laser" + ( i + 1 ) ].volume = 0.5;
+					g.assets.audio[ "laser" + ( i + 1 ) ].playbackRate = 1.5;
+				}
+				g.soundLoaded = true;
+				console.log( "Audio loaded" );
+			} );
+
+			// Wait for the sprite sheet to load
+			g.spritesheet = await spriteSheetPromise;
+
+			console.log( "Spritesheets loaded" );
+			// Create the world and show the intro
 			g.createWorld();
 			g.showIntro();
 		} )();

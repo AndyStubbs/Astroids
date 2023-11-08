@@ -39,6 +39,7 @@
 	};
 
 	g.showIntro = function showIntro() {
+		g.app.ticker.remove( runFadeIn );
 		intro.fadeItems.push( intro.loading );
 		intro.action = () => {
 			createTextObjects();
