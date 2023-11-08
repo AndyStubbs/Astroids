@@ -12,7 +12,7 @@
 		game.world.scale.y = 0.4;
 		g.app.stage.addChild( game.world );
 		game.astroids = [];
-		createAstroids( game.level, 3 );
+		createAstroids( game.level * 2 + 1, 3 );
 		g.app.ticker.add( run );
 	};
 
@@ -322,7 +322,7 @@
 		g.app.stage.addChild( game.ui.lives );
 
 		// Add Level Text
-		game.ui.level = new PIXI.Text( game.level, {
+		game.ui.level = new PIXI.Text( "Level: " + game.level, {
 			"fontFamily": "Arial",
 			"fontSize": 36,
 			"fill": 0xFFFFFF,
@@ -372,7 +372,7 @@
 		}
 		game.ui.lives.text = game.lives;
 		game.ui.score.text = game.score;
-		game.ui.level.text = game.level;
+		game.ui.level.text = "Level: " + game.level;
 		game.ui.astroidCounter.text = game.astroids.length;
 	}
 
@@ -437,6 +437,9 @@
 						return;
 					}
 					if( checkCollision( bullet.container, astroid.container ) ) {
+						if( g.soundLoaded ) {
+							g.assets.audio[ "hit" ].play();
+						}
 						game.score += 3;
 						astroid.health--;
 						if( astroid.health <= 0 ) {
@@ -451,14 +454,28 @@
 	}
 
 	function killAstroid( astroid ) {
+		if( g.soundLoaded ) {
+			if( astroid.size === 3 ) {
+				g.assets.audio[ "explosion1" ].play();
+			} else {
+				g.assets.audio[ "explosion2" ].play();
+			}
+		}
 		game.score += 10;
 		astroid.afterKilled = () => {
 			game.astroids.splice( game.astroids.indexOf( astroid ), 1 );
 			if( game.astroids.length === 0 ) {
+				if( g.soundLoaded ) {
+					g.assets.audio[ "win" ].play();
+				}
 				game.level++;
+				updateUi();
 				setTimeout( () => {
-					createAstroids( game.level, 3 );
-				}, 3000 );
+					game.ship.shieldCooldown = game.ship.shieldCooldownMax;
+					game.ship.shield.visible = true;
+					createAstroids( game.level * 2 + 1, 3 );
+					updateUi();
+				}, 2000 );
 				game.score += 100;
 			}
 			updateUi();
@@ -488,26 +505,33 @@
 			// Check for collisions with the ship
 			if( game.isRunning && game.ship.isAlive && game.ship.shieldCooldown <= 0 ) {
 				if( checkCollision( game.ship.container, astroid.container ) ) {
+					if( g.soundLoaded ) {
+						g.assets.audio[ "explosion1" ].play();
+					}
 					killObject( game.ship );
 					game.lives--;
 					if( game.lives < 0 ) {
 						setTimeout( () => {
+							if( g.soundLoaded ) {
+								g.assets.audio[ "lose" ].play();
+							}
 							game.isRunning = false;
 							g.app.stage.removeChildren();
 							g.app.stage.addChild( g.assets.background );
 							g.app.ticker.remove( run );
 							game.level = 1;
+							game.astroids = [];
 							g.createWorld();
 							document.removeEventListener( "keydown", keydown );
 							document.removeEventListener( "keyup", keyup );
 							window.removeEventListener( "blur", blur );
 							g.showIntro();
-						}, 3000 );
+						}, 2000 );
 					} else {
 						updateUi();
 						setTimeout( () => {
 							setupShip( game.ship );
-						}, 3000 );
+						}, 2000 );
 					}
 				}
 			}

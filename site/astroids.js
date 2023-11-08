@@ -45,7 +45,11 @@ g.getHexColor = function getHex( color ) {
 				"assets/sounds/sfx_shieldDown.ogg",
 				"assets/sounds/sfx_shieldUp.ogg",
 				"assets/sounds/sfx_twoTone.ogg",
-				"assets/sounds/sfx_zap.ogg"
+				"assets/sounds/sfx_zap.ogg",
+				"assets/sounds/win.mp3",
+				"assets/sounds/hit.wav",
+				"assets/sounds/explosion_1.wav",
+				"assets/sounds/explosion_2.wav",
 			];
 
 			// Load the assets
@@ -66,7 +70,11 @@ g.getHexColor = function getHex( color ) {
 					"shieldDown": audios[ 7 ],
 					"shieldUp": audios[ 8 ],
 					"twoTone": audios[ 9 ],
-					"zap": audios[ 10 ]
+					"zap": audios[ 10 ],
+					"win": audios[ 11 ],
+					"hit": audios[ 12 ],
+					"explosion1": audios[ 13 ],
+					"explosion2": audios[ 14 ],
 				};
 				for( let i = 0; i < 6; i++ ) {
 					g.assets.audio[ "laser" + ( i + 1 ) ].volume = 0.5;
