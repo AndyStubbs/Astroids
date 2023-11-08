@@ -159,6 +159,8 @@
 		ship.components = [];
 		ship.shieldCooldownMax = 200;
 		ship.shieldCooldown = ship.shieldCooldownMax;
+		ship.laserSounds = [ "laser1", "laser2", "laser3", "laser4", "laser5", "laser6" ];
+		ship.laserSound = 0;
 
 		// Set the ship's position to the center of the screen
 		const pos = game.world.toLocal(
@@ -413,11 +415,14 @@
 	}
 
 	function fireBullets( ship ) {
+		let didFire = false;
 		ship.guns.forEach( ( gun ) => {
 			const bullet = getBullet( ship );
 			if( !bullet ) { 
 				return;
 			}
+			didFire = true;
+			g.assets.audio[ ship.laserSounds[ ship.laserSound ] ].play();
 			bullet.isAlive = true;
 			bullet.body.visible = true;
 			const pos = game.world.toLocal( gun.position, ship.container );
@@ -428,6 +433,9 @@
 			bullet.lifespan = 100;
 			bullet.container.alpha = 1;
 		} );
+		if( didFire ) {
+			ship.laserSound = ( ship.laserSound + 1 ) % ship.laserSounds.length;
+		}
 	}
 
 	function getBullet( ship ) {

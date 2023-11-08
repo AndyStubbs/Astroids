@@ -34,6 +34,38 @@ g.getHexColor = function getHex( color ) {
 
 		// Load the assets
 		( async () => {
+			const audioSrcs = [
+				"assets/sounds/sfx_laser1.ogg",
+				"assets/sounds/sfx_laser2.ogg",
+				"assets/sounds/sfx_laser1.ogg",
+				"assets/sounds/sfx_laser2.ogg",
+				"assets/sounds/sfx_laser1.ogg",
+				"assets/sounds/sfx_laser2.ogg",
+				"assets/sounds/sfx_lose.ogg",
+				"assets/sounds/sfx_shieldDown.ogg",
+				"assets/sounds/sfx_shieldUp.ogg",
+				"assets/sounds/sfx_twoTone.ogg",
+				"assets/sounds/sfx_zap.ogg"
+			];
+			const audioPromises = audioSrcs.map( src => loadAudio( src ) );
+			const audios = await Promise.all( audioPromises );
+			g.assets.audio = {
+				"laser1": audios[ 0 ],
+				"laser2": audios[ 1 ],
+				"laser3": audios[ 2 ],
+				"laser4": audios[ 3 ],
+				"laser5": audios[ 4 ],
+				"laser6": audios[ 5 ],
+				"lose": audios[ 6 ],
+				"shieldDown": audios[ 7 ],
+				"shieldUp": audios[ 8 ],
+				"twoTone": audios[ 9 ],
+				"zap": audios[ 10 ]
+			};
+			for( let i = 0; i < 6; i++ ) {
+				g.assets.audio[ "laser" + ( i + 1 ) ].volume = 0.5;
+				g.assets.audio[ "laser" + ( i + 1 ) ].playbackRate = 2.5;
+			}
 			g.spritesheet = await PIXI.Assets.load( "assets/spritesheet.json" );
 			g.createWorld();
 			g.showIntro();
@@ -54,6 +86,14 @@ g.getHexColor = function getHex( color ) {
 
 		// Resize the background when the window is resized
 		window.addEventListener( "resize", resize );
+	}
+
+	function loadAudio( src ) {
+		return new Promise( ( resolve, reject ) => {
+			const audio = new Audio( src );
+			audio.addEventListener( "canplaythrough", () => resolve( audio ) );
+			audio.addEventListener( "error", reject );
+		} );
 	}
 
 	function resize() {
